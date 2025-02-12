@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.user import User
+from app.schemas.user import UserLogin
 from passlib.context import CryptContext
 import jwt
 import os
@@ -23,10 +24,10 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login")
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
-    if not user or not pwd_context.verify(request.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Credencias Inválidas")
-    
-    token = jwt.encode({"email": user.email}, SECRET_KEY, algorithm="HS256")
-    return {"token": token}
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
+
+    token = jwt.encode({"email": db_user.email}, SECRET_KEY, algorithm="HS256")
+    return {"access_token": token, "token_type": "bearer"}

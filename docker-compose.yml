@@ -19,7 +19,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres_container:5432/mydatabase
+      - DATABASE_URL=postgresql://myuser:mypassword@postgres_container:5432/mydatabase
     ports:
       - "8000:8000"
 
