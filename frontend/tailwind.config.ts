@@ -1,16 +1,19 @@
 import type { Config } from "tailwindcss";
+import { colors } from "./desing-system/token";
 
 export default {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./components/**/*.{js,ts,jsx,tsx,mdx}","./app/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: colors.primary,
+        secondary: colors.secondary,
+        accent: colors.accent,
+        error: colors.error,
+        background: colors.background,
+      },
+      fontFamily: {
+        sans: ["Roboto", "Arial", "sans-serif"],
       },
     },
   },

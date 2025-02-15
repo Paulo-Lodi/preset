@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import axios from "axios";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState("");
+    const [loading, setLoading] = useState<boolean>(false);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         setLoading(true);
         setError("");
@@ -49,7 +51,7 @@ export default function Login() {
                     <label htmlFor="email" className="block text-sm font-medium mb-2">
                         Email
                     </label>
-                    <input 
+                    <Input 
                         type="email"
                         id="email"
                         value={email}
@@ -62,7 +64,7 @@ export default function Login() {
                     <label htmlFor="password" className="block text-sm font-medium mb-2">
                         Senha
                     </label>
-                    <input 
+                    <Input 
                         type="password"
                         id="password"
                         value={password}
@@ -71,13 +73,12 @@ export default function Login() {
                         className="w-full p-2 border rounded" 
                     />
                 </div>
-                <button
-                    type="submit"
+                <Button type="submit"
                     className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
                     disabled={loading}
-                >
+                    >
                     {loading ? "Entrando..." : "Entrar"}
-                </button>
+                </Button>
             </form>
         </div>
     );
