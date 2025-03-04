@@ -1,11 +1,29 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+import React, { InputHTMLAttributes } from "react";
 
-export const Input: React.FC<InputProps> = ({ className, ...props }) => {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  name: string;
+  error?: string;
+}
+
+export function Input({ label, name, error, ...rest }: InputProps) {
   return (
-    <input
-      className={`border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary ${className}`}
-      {...props}
-    />
+    <div className="w-full">
+      <label 
+        htmlFor={name} 
+        className="block text-sm font-medium text-gray-700 mb-1"
+      >
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        className={`w-full px-3 py-2 border ${
+          error ? "border-red-500" : "border-gray-300"
+        } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+        {...rest}
+      />
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+    </div>
   );
-};
+}
