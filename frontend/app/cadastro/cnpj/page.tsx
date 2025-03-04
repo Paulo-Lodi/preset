@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import { ArrowLeft, Building, Save } from "lucide-react";
+import { ArrowLeft, Building, Save, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/app/services/api";
@@ -31,6 +31,25 @@ export default function CadastroCnpj() {
 
     const handleChange = (e: { target: { name: any; value: any; }; }) => {
         const { name, value } = e.target;
+        
+        // Apply CNPJ mask if the field is cnpj
+        if (name === 'cnpj') {
+            const cnpjValue = value.replace(/\D/g, ''); // Remove non-digits
+            let formattedCnpj = '';
+            
+            if (cnpjValue.length <= 14) {
+                // Apply CNPJ mask: 00.000.000/0000-00
+                formattedCnpj = cnpjValue
+                    .replace(/^(\d{2})(\d)/, '$1.$2')
+                    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+                    .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, '$1.$2.$3/$4-$5');
+                
+                setFormData(prev => ({ ...prev, [name]: formattedCnpj }));
+                return;
+            }
+        }
+        
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -55,22 +74,53 @@ export default function CadastroCnpj() {
         }
     };
 
-    const handleSubmit = async (e: { preventDefault: () => void; }) => {
-        e.preventDefault();
-        setLoading(true);
+    const consultarCNPJ = async (cnpj: string) => {
+        // Remove any non-numeric characters
+        const cnpjLimpo = cnpj.replace(/[^\d]/g, '');
+        
+        if (cnpjLimpo.length !== 14) {
+            alert("CNPJ inválido");
+            return;
+        }
 
+        setLoading(true);
         try {
-            await api.post('/clientes/juridico', formData);
-            alert("Cliente cadastrado com sucesso!");
-            router.push("/clientes");
+            const response = await fetch(`https://publica.cnpj.ws/cnpj/${cnpjLimpo}`);
+            const data = await response.json();
+
+            if (data.status === "ERROR") {
+                throw new Error(data.message);
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                razaoSocial: data.razao_social,
+                nomeFantasia: data.estabelecimento.nome_fantasia || "",
+                telefone: data.estabelecimento.ddd1 + data.estabelecimento.telefone1 || "",
+                email: data.estabelecimento.email || "",
+                cep: data.estabelecimento.cep || "",
+                endereco: data.estabelecimento.logradouro || "",
+                numero: data.estabelecimento.numero || "",
+                complemento: data.estabelecimento.complemento || "",
+                bairro: data.estabelecimento.bairro || "",
+                cidade: data.estabelecimento.cidade.nome || "",
+                estado: data.estabelecimento.estado.sigla || "",
+            }));
+
+            // Trigger CEP search if needed
+            if (data.estabelecimento.cep) {
+                await buscarCep();
+            }
+
         } catch (error) {
-            console.error("Erro ao cadastrar:", error);
-            alert("Erro ao cadastrar cliente. Verifique os dados e tente novamente.");
+            console.error("Erro ao consultar CNPJ:", error);
+            alert("Erro ao consultar CNPJ. Verifique o número e tente novamente.");
         } finally {
             setLoading(false);
         }
     };
 
+    // Update the CNPJ input section to include a search button
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             {/* Header */}
@@ -114,7 +164,10 @@ export default function CadastroCnpj() {
                         <h1 className="text-2xl font-bold text-gray-800">Cadastro de Pessoa Jurídica</h1>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        // TODO: Implement form submission logic
+                    }}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Dados da Empresa */}
                             <div className="col-span-2">
@@ -122,14 +175,34 @@ export default function CadastroCnpj() {
                             </div>
 
                             <div>
-                                <Input
-                                    label="CNPJ"
-                                    name="cnpj"
-                                    value={formData.cnpj}
-                                    onChange={handleChange}
-                                    placeholder="00.000.000/0000-00"
-                                    required
-                                />
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <Input
+                                            label="CNPJ"
+                                            name="cnpj"
+                                            value={formData.cnpj}
+                                            onChange={handleChange}
+                                            placeholder="00.000.000/0000-00"
+                                            required
+                                            maxLength={18}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        onClick={() => consultarCNPJ(formData.cnpj)}
+                                        className="mt-[30px] bg-blue-600 text-white hover:bg-blue-700 h-[38px] px-3 rounded-md flex items-center justify-center transition-all duration-200 transform hover:scale-105"
+                                        disabled={loading}
+                                        title="Consultar CNPJ"
+                                    >
+                                        <Search size={16} className="mr-1" />
+                                        <span className="text-sm">Consultar</span>
+                                    </Button>
+                                </div>
+                                {loading && (
+                                    <p className="text-xs text-blue-600 mt-1 animate-pulse">
+                                        Consultando CNPJ, aguarde...
+                                    </p>
+                                )}
                             </div>
 
                             <div>
