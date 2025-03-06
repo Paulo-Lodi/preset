@@ -12,12 +12,16 @@ export default function CadastroCnpj() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
+        id: "",
         cnpj: "",
         razaoSocial: "",
         nomeFantasia: "",
         inscricaoEstadual: "",
         telefone: "",
+        celular: "",
         email: "",
+        nomeContato: "",
+        dataCadastro: new Date().toISOString().split('T')[0],
         cep: "",
         endereco: "",
         numero: "",
@@ -50,27 +54,52 @@ export default function CadastroCnpj() {
             }
         }
         
+        // Apply CEP mask if the field is cep
+        if (name === 'cep') {
+            const cepValue = value.replace(/\D/g, ''); // Remove non-digits
+            let formattedCep = '';
+            
+            if (cepValue.length <= 8) {
+                // Apply CEP mask: 00000-000
+                formattedCep = cepValue
+                    .replace(/^(\d{5})(\d)/, '$1-$2');
+                
+                setFormData(prev => ({ ...prev, [name]: formattedCep }));
+                return;
+            }
+        }
+        
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const buscarCep = async () => {
-        if (formData.cep.length === 8) {
-            try {
-                const response = await fetch(`https://viacep.com.br/ws/${formData.cep}/json/`);
-                const data = await response.json();
+        const cepLimpo = formData.cep.replace(/\D/g, '');
+        
+        if (cepLimpo.length !== 8) {
+            return; // CEP incompleto, não buscar
+        }
 
-                if (!data.erro) {
-                    setFormData(prev => ({
-                        ...prev,
-                        endereco: data.logradouro,
-                        bairro: data.bairro,
-                        cidade: data.localidade,
-                        estado: data.uf
-                    }));
-                }
-            } catch (error) {
-                console.error("Erro ao buscar CEP:", error);
+        setLoading(true);
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+            const data = await response.json();
+
+            if (data.erro) {
+                throw new Error("CEP não encontrado");
             }
+
+            setFormData(prev => ({
+                ...prev,
+                endereco: data.logradouro || prev.endereco,
+                bairro: data.bairro || prev.bairro,
+                cidade: data.localidade || prev.cidade,
+                estado: data.uf || prev.estado
+            }));
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            alert("Não foi possível encontrar o endereço para este CEP. Verifique se o CEP está correto.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -175,6 +204,28 @@ export default function CadastroCnpj() {
                             </div>
 
                             <div>
+                                <Input
+                                    label="ID de Cadastro"
+                                    name="id"
+                                    value={formData.id}
+                                    onChange={handleChange}
+                                    placeholder="ID automático"
+                                    disabled
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Data de Cadastro"
+                                    name="dataCadastro"
+                                    type="date"
+                                    value={formData.dataCadastro}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div>
                                 <div className="flex gap-2">
                                     <div className="flex-1">
                                         <Input
@@ -238,12 +289,22 @@ export default function CadastroCnpj() {
 
                             <div>
                                 <Input
-                                    label="Telefone"
+                                    label="Telefone Fixo"
                                     name="telefone"
                                     value={formData.telefone}
                                     onChange={handleChange}
                                     placeholder="(00) 0000-0000"
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Telefone Celular"
+                                    name="celular"
+                                    value={formData.celular}
+                                    onChange={handleChange}
+                                    placeholder="(00) 00000-0000"
                                 />
                             </div>
 
@@ -259,7 +320,17 @@ export default function CadastroCnpj() {
                                 />
                             </div>
 
-                            {/* Endereço */}
+                            <div>
+                                <Input
+                                    label="Nome de Contato"
+                                    name="nomeContato"
+                                    value={formData.nomeContato}
+                                    onChange={handleChange}
+                                    placeholder="Nome da pessoa de contato"
+                                />
+                            </div>
+
+                            {/* Endereço section remains unchanged */}
                             <div className="col-span-2 mt-4">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Endereço</h2>
                             </div>

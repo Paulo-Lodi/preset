@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { ArrowLeft, User, Save } from "lucide-react";
+// Removed Search icon since it's not used
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/app/services/api";
@@ -12,6 +13,7 @@ export default function CadastroCpf() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
+        id: "",
         cpf: "",
         nome: "",
         dataNascimento: "",
@@ -34,34 +36,90 @@ export default function CadastroCpf() {
 
     const handleChange = (e: { target: { name: any; value: any; }; }) => {
         const { name, value } = e.target;
+
+        // Apply CPF mask if the field is cpf
+        if (name === 'cpf') {
+            const cpfValue = value.replace(/\D/g, ''); // Remove non-digits
+            let formattedCpf = '';
+
+            if (cpfValue.length <= 11) {
+                // Apply CPF mask: 000.000.000-00
+                formattedCpf = cpfValue
+                    .replace(/^(\d{3})(\d)/, '$1.$2')
+                    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+
+                setFormData(prev => ({ ...prev, [name]: formattedCpf }));
+                return;
+            }
+        }
+
+        // Apply CEP mask if the field is cep
+        if (name === 'cep') {
+            const cepValue = value.replace(/\D/g, ''); // Remove non-digits
+            let formattedCep = '';
+
+            if (cepValue.length <= 8) {
+                // Apply CEP mask: 00000-000
+                formattedCep = cepValue
+                    .replace(/^(\d{5})(\d)/, '$1-$2');
+
+                setFormData(prev => ({ ...prev, [name]: formattedCep }));
+                return;
+            }
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const buscarCep = async () => {
-        if (formData.cep.length === 8) {
-            try {
-                const response = await fetch(`https://viacep.com.br/ws/${formData.cep}/json/`);
-                const data = await response.json();
-                
-                if (!data.erro) {
-                    setFormData(prev => ({
-                        ...prev,
-                        endereco: data.logradouro,
-                        bairro: data.bairro,
-                        cidade: data.localidade,
-                        estado: data.uf
-                    }));
-                }
-            } catch (error) {
-                console.error("Erro ao buscar CEP:", error);
+    // Helper function to format date from API to input format (YYYY-MM-DD)
+    const formatDateForInput = (dateString: string) => {
+        try {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
+            return dateString;
+        } catch (e) {
+            return dateString;
+        }
+    };
+
+    const buscarCep = async () => {
+        const cepLimpo = formData.cep.replace(/\D/g, '');
+
+        if (cepLimpo.length !== 8) {
+            return; // CEP incompleto, não buscar
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+            const data = await response.json();
+
+            if (data.erro) {
+                throw new Error("CEP não encontrado");
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                endereco: data.logradouro || prev.endereco,
+                bairro: data.bairro || prev.bairro,
+                cidade: data.localidade || prev.cidade,
+                estado: data.uf || prev.estado
+            }));
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            alert("Não foi possível encontrar o endereço para este CEP. Verifique se o CEP está correto.");
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         setLoading(true);
-        
+
         try {
             await api.post('/clientes/fisico', formData);
             alert("Cliente cadastrado com sucesso!");
@@ -89,7 +147,7 @@ export default function CadastroCpf() {
                     </Link>
                 </div>
             </div>
-            
+
             {/* Breadcrumb */}
             <div className="bg-gray-100 w-full py-2 px-4 border-b border-gray-200">
                 <div className="max-w-7xl mx-auto">
@@ -116,14 +174,25 @@ export default function CadastroCpf() {
                         <User className="text-green-600 mr-3" size={28} />
                         <h1 className="text-2xl font-bold text-gray-800">Cadastro de Pessoa Física</h1>
                     </div>
-                    
+
                     <form onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Dados Pessoais */}
                             <div className="col-span-2">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Dados Pessoais</h2>
                             </div>
-                            
+
+                            <div>
+                                <Input
+                                    label="ID de Cadastro"
+                                    name="id"
+                                    value={formData.id}
+                                    onChange={handleChange}
+                                    placeholder="ID automático"
+                                    disabled
+                                />
+                            </div>
+
                             <div>
                                 <Input
                                     label="CPF"
@@ -132,9 +201,10 @@ export default function CadastroCpf() {
                                     onChange={handleChange}
                                     placeholder="000.000.000-00"
                                     required
+                                    maxLength={14}
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="RG"
@@ -144,7 +214,7 @@ export default function CadastroCpf() {
                                     placeholder="00.000.000-0"
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Órgão Emissor"
@@ -154,7 +224,7 @@ export default function CadastroCpf() {
                                     placeholder="SSP/UF"
                                 />
                             </div>
-                            
+
                             <div className="col-span-2 md:col-span-1">
                                 <Input
                                     label="Data de Nascimento"
@@ -165,7 +235,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div className="col-span-2">
                                 <Input
                                     label="Nome Completo"
@@ -176,7 +246,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Profissão"
@@ -186,7 +256,7 @@ export default function CadastroCpf() {
                                     placeholder="Profissão"
                                 />
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Estado Civil
@@ -205,12 +275,12 @@ export default function CadastroCpf() {
                                     <option value="União Estável">União Estável</option>
                                 </select>
                             </div>
-                            
+
                             {/* Contato */}
                             <div className="col-span-2 mt-4">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Contato</h2>
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Telefone"
@@ -220,7 +290,7 @@ export default function CadastroCpf() {
                                     placeholder="(00) 0000-0000"
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Celular"
@@ -231,7 +301,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div className="col-span-2">
                                 <Input
                                     label="E-mail"
@@ -243,12 +313,12 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             {/* Endereço */}
                             <div className="col-span-2 mt-4">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Endereço</h2>
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="CEP"
@@ -260,7 +330,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div className="col-span-2 md:col-span-1">
                                 <Input
                                     label="Endereço"
@@ -271,7 +341,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Número"
@@ -282,7 +352,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Complemento"
@@ -292,7 +362,7 @@ export default function CadastroCpf() {
                                     placeholder="Complemento"
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Bairro"
@@ -303,7 +373,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Cidade"
@@ -314,7 +384,7 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             <div>
                                 <Input
                                     label="Estado"
@@ -325,12 +395,12 @@ export default function CadastroCpf() {
                                     required
                                 />
                             </div>
-                            
+
                             {/* Informações Adicionais */}
                             <div className="col-span-2 mt-4">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Informações Adicionais</h2>
                             </div>
-                            
+
                             <div className="col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Observações
@@ -345,7 +415,7 @@ export default function CadastroCpf() {
                                 ></textarea>
                             </div>
                         </div>
-                        
+
                         <div className="mt-8 flex justify-end space-x-4">
                             <Button
                                 type="button"
@@ -373,3 +443,22 @@ export default function CadastroCpf() {
         </div>
     );
 }
+
+// Helper function to format phone numbers
+const formatPhone = (phone: string | undefined) => {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 11) {
+        return cleaned.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (cleaned.length === 10) {
+        return cleaned.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+    }
+    return phone;
+};
+
+// Helper function to format CEP
+const formatCEP = (cep: string | undefined) => {
+    if (!cep) return '';
+    const cleaned = cep.replace(/\D/g, '');
+    return cleaned.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+};
