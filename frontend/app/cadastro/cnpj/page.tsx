@@ -187,76 +187,77 @@ export default function CadastroCnpj() {
 
             {/* Conteúdo principal */}
             <div className="flex-grow flex flex-col items-center p-6">
-                <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-5xl">
-                    <div className="flex items-center mb-6">
-                        <Building className="text-blue-600 mr-3" size={28} />
-                        <h1 className="text-2xl font-bold text-gray-800">Cadastro de Pessoa Jurídica</h1>
+                <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-4xl">
+                    <div className="flex items-center mb-4">
+                        <Building className="text-blue-600 mr-2" size={24} />
+                        <h1 className="text-xl font-bold text-gray-800">Cadastro de Pessoa Jurídica</h1>
                     </div>
 
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         // TODO: Implement form submission logic
                     }}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Dados da Empresa      */}
-                            <div className="col-span-2">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Dados da Empresa</h2>
+                        {/* CNPJ Lookup Section - Destacado no topo */}
+                        <div className="mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <Input
+                                        label="CNPJ"
+                                        name="cnpj"
+                                        value={formData.cnpj}
+                                        onChange={handleChange}
+                                        placeholder="00.000.000/0000-00"
+                                        required
+                                        maxLength={18}
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    onClick={() => consultarCNPJ(formData.cnpj)}
+                                    className="mt-[30px] bg-blue-600 text-white hover:bg-blue-700 h-[38px] px-3 rounded-md flex items-center justify-center"
+                                    disabled={loading}
+                                    title="Consultar CNPJ"
+                                >
+                                    <Search size={16} className="mr-1" />
+                                    <span className="text-sm">Consultar</span>
+                                </Button>
                             </div>
+                            {loading && (
+                                <p className="text-xs text-blue-600 mt-1 animate-pulse">
+                                    Consultando CNPJ, aguarde...
+                                </p>
+                            )}
+                        </div>
 
-                            <div>
-                                <Input
-                                    label="ID de Cadastro"
-                                    name="id"
-                                    value={formData.id}
-                                    onChange={handleChange}
-                                    placeholder="ID automático"
-                                    disabled
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Data de Cadastro"
-                                    name="dataCadastro"
-                                    type="date"
-                                    value={formData.dataCadastro}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <div className="flex gap-2">
-                                    <div className="flex-1">
+                        {/* Layout de duas colunas mais compacto */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            {/* Coluna 1: Dados da Empresa */}
+                            <div className="space-y-4">
+                                <h2 className="text-md font-semibold text-gray-700 border-b pb-1">Dados da Empresa</h2>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
                                         <Input
-                                            label="CNPJ"
-                                            name="cnpj"
-                                            value={formData.cnpj}
+                                            label="ID de Cadastro"
+                                            name="id"
+                                            value={formData.id}
                                             onChange={handleChange}
-                                            placeholder="00.000.000/0000-00"
-                                            required
-                                            maxLength={18}
+                                            placeholder="ID automático"
+                                            disabled
                                         />
                                     </div>
-                                    <Button
-                                        type="button"
-                                        onClick={() => consultarCNPJ(formData.cnpj)}
-                                        className="mt-[30px] bg-blue-600 text-white hover:bg-blue-700 h-[38px] px-3 rounded-md flex items-center justify-center transition-all duration-200 transform hover:scale-105"
-                                        disabled={loading}
-                                        title="Consultar CNPJ"
-                                    >
-                                        <Search size={16} className="mr-1" />
-                                        <span className="text-sm">Consultar</span>
-                                    </Button>
+                                    <div>
+                                        <Input
+                                            label="Data de Cadastro"
+                                            name="dataCadastro"
+                                            type="date"
+                                            value={formData.dataCadastro}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                {loading && (
-                                    <p className="text-xs text-blue-600 mt-1 animate-pulse">
-                                        Consultando CNPJ, aguarde...
-                                    </p>
-                                )}
-                            </div>
 
-                            <div>
                                 <Input
                                     label="Inscrição Estadual"
                                     name="inscricaoEstadual"
@@ -264,9 +265,7 @@ export default function CadastroCnpj() {
                                     onChange={handleChange}
                                     placeholder="Inscrição Estadual"
                                 />
-                            </div>
 
-                            <div className="col-span-2">
                                 <Input
                                     label="Razão Social"
                                     name="razaoSocial"
@@ -275,9 +274,7 @@ export default function CadastroCnpj() {
                                     placeholder="Razão Social"
                                     required
                                 />
-                            </div>
 
-                            <div className="col-span-2">
                                 <Input
                                     label="Nome Fantasia"
                                     name="nomeFantasia"
@@ -285,69 +282,81 @@ export default function CadastroCnpj() {
                                     onChange={handleChange}
                                     placeholder="Nome Fantasia"
                                 />
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Telefone Fixo"
+                                            name="telefone"
+                                            value={formData.telefone}
+                                            onChange={handleChange}
+                                            placeholder="(00) 0000-0000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Telefone Celular"
+                                            name="celular"
+                                            value={formData.celular}
+                                            onChange={handleChange}
+                                            placeholder="(00) 00000-0000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="E-mail"
+                                            name="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            placeholder="email@empresa.com"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Nome de Contato"
+                                            name="nomeContato"
+                                            value={formData.nomeContato}
+                                            onChange={handleChange}
+                                            placeholder="Nome do contato"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div>
-                                <Input
-                                    label="Telefone Fixo"
-                                    name="telefone"
-                                    value={formData.telefone}
-                                    onChange={handleChange}
-                                    placeholder="(00) 0000-0000"
-                                    required
-                                />
-                            </div>
+                            {/* Coluna 2: Endereço e Informações Adicionais */}
+                            <div className="space-y-4">
+                                <h2 className="text-md font-semibold text-gray-700 border-b pb-1">Endereço</h2>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="CEP"
+                                            name="cep"
+                                            value={formData.cep}
+                                            onChange={handleChange}
+                                            onBlur={buscarCep}
+                                            placeholder="00000-000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Estado"
+                                            name="estado"
+                                            value={formData.estado}
+                                            onChange={handleChange}
+                                            placeholder="Estado"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Telefone Celular"
-                                    name="celular"
-                                    value={formData.celular}
-                                    onChange={handleChange}
-                                    placeholder="(00) 00000-0000"
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="E-mail"
-                                    name="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="email@empresa.com"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Nome de Contato"
-                                    name="nomeContato"
-                                    value={formData.nomeContato}
-                                    onChange={handleChange}
-                                    placeholder="Nome da pessoa de contato"
-                                />
-                            </div>
-
-                            {/* Endereço section remains unchanged */}
-                            <div className="col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Endereço</h2>
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="CEP"
-                                    name="cep"
-                                    value={formData.cep}
-                                    onChange={handleChange}
-                                    onBlur={buscarCep}
-                                    placeholder="00000-000"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
                                 <Input
                                     label="Endereço"
                                     name="endereco"
@@ -356,68 +365,54 @@ export default function CadastroCnpj() {
                                     placeholder="Rua, Avenida, etc."
                                     required
                                 />
-                            </div>
 
-                            <div>
-                                <Input
-                                    label="Número"
-                                    name="numero"
-                                    value={formData.numero}
-                                    onChange={handleChange}
-                                    placeholder="Número"
-                                    required
-                                />
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Número"
+                                            name="numero"
+                                            value={formData.numero}
+                                            onChange={handleChange}
+                                            placeholder="Número"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Complemento"
+                                            name="complemento"
+                                            value={formData.complemento}
+                                            onChange={handleChange}
+                                            placeholder="Complemento"
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Complemento"
-                                    name="complemento"
-                                    value={formData.complemento}
-                                    onChange={handleChange}
-                                    placeholder="Complemento"
-                                />
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Bairro"
+                                            name="bairro"
+                                            value={formData.bairro}
+                                            onChange={handleChange}
+                                            placeholder="Bairro"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Cidade"
+                                            name="cidade"
+                                            value={formData.cidade}
+                                            onChange={handleChange}
+                                            placeholder="Cidade"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Bairro"
-                                    name="bairro"
-                                    value={formData.bairro}
-                                    onChange={handleChange}
-                                    placeholder="Bairro"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Cidade"
-                                    name="cidade"
-                                    value={formData.cidade}
-                                    onChange={handleChange}
-                                    placeholder="Cidade"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Estado"
-                                    name="estado"
-                                    value={formData.estado}
-                                    onChange={handleChange}
-                                    placeholder="Estado"
-                                    required
-                                />
-                            </div>
-
-                            {/* Informações Adicionais */}
-                            <div className="col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Informações Adicionais</h2>
-                            </div>
-
-                            <div className="col-span-2">
+                                <h2 className="text-md font-semibold mt-2 text-gray-700 border-b pb-1">Informações Adicionais</h2>
+                                
                                 <Input
                                     label="Nome do Responsável"
                                     name="responsavel"
@@ -426,24 +421,24 @@ export default function CadastroCnpj() {
                                     placeholder="Nome do Responsável"
                                     required
                                 />
-                            </div>
 
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Observações
-                                </label>
-                                <textarea
-                                    name="observacoes"
-                                    value={formData.observacoes}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Observações adicionais"
-                                ></textarea>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Observações
+                                    </label>
+                                    <textarea
+                                        name="observacoes"
+                                        value={formData.observacoes}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Observações adicionais"
+                                    ></textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 flex justify-end space-x-4">
+                        <div className="mt-6 flex justify-end space-x-4">
                             <Button
                                 type="button"
                                 onClick={() => router.push("/cadastro")}

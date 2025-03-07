@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import { ArrowLeft, User, Save } from "lucide-react";
-// Removed Search icon since it's not used
+import { ArrowLeft, User, Save, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/app/services/api";
@@ -132,6 +131,34 @@ export default function CadastroCpf() {
         }
     };
 
+    const consultarCPF = async (cpf: string) => {
+        if (!cpf || cpf.length < 14) {
+            alert("Por favor, informe um CPF válido");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Implement CPF consultation logic here
+            // This is a placeholder for the API call
+            const response = await api.get(`/consulta/cpf/${cpf.replace(/\D/g, '')}`);
+            const data = response.data;
+
+            // Update form with the data from API
+            setFormData(prev => ({
+                ...prev,
+                nome: data.nome || "",
+                // Add other fields that might come from the API
+            }));
+
+        } catch (error) {
+            console.error("Erro ao consultar CPF:", error);
+            alert("Erro ao consultar CPF. Verifique o número e tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             {/* Header */}
@@ -169,74 +196,74 @@ export default function CadastroCpf() {
 
             {/* Conteúdo principal */}
             <div className="flex-grow flex flex-col items-center p-6">
-                <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-5xl">
-                    <div className="flex items-center mb-6">
-                        <User className="text-green-600 mr-3" size={28} />
-                        <h1 className="text-2xl font-bold text-gray-800">Cadastro de Pessoa Física</h1>
+                <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-4xl">
+                    <div className="flex items-center mb-4">
+                        <User className="text-green-600 mr-2" size={24} />
+                        <h1 className="text-xl font-bold text-gray-800">Cadastro de Pessoa Física</h1>
                     </div>
 
                     <form onSubmit={handleSubmit}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Dados Pessoais */}
-                            <div className="col-span-2">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Dados Pessoais</h2>
+                        {/* CPF Lookup Section - Destacado no topo - adjusted to match CNPJ page */}
+                        <div className="mb-4 bg-green-50 p-3 rounded-lg border border-green-100">
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <Input
+                                        label="CPF"
+                                        name="cpf"
+                                        value={formData.cpf}
+                                        onChange={handleChange}
+                                        placeholder="000.000.000-00"
+                                        required
+                                        maxLength={14}
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    onClick={() => consultarCPF(formData.cpf)}
+                                    className="mt-[30px] bg-green-600 text-white hover:bg-green-700 h-[38px] px-3 rounded-md flex items-center justify-center"
+                                    disabled={loading}
+                                    title="Consultar CPF"
+                                >
+                                    <Search size={16} className="mr-1" />
+                                    <span className="text-sm">Consultar</span>
+                                </Button>
                             </div>
+                            {loading && (
+                                <p className="text-xs text-green-600 mt-1 animate-pulse">
+                                    Consultando CPF, aguarde...
+                                </p>
+                            )}
+                        </div>
 
-                            <div>
-                                <Input
-                                    label="ID de Cadastro"
-                                    name="id"
-                                    value={formData.id}
-                                    onChange={handleChange}
-                                    placeholder="ID automático"
-                                    disabled
-                                />
-                            </div>
+                        {/* Layout de duas colunas - remains the same */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            {/* Coluna 1: Dados Pessoais */}
+                            <div className="space-y-4">
+                                <h2 className="text-md font-semibold text-gray-700 border-b pb-1">Dados Pessoais</h2>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="ID de Cadastro"
+                                            name="id"
+                                            value={formData.id}
+                                            onChange={handleChange}
+                                            placeholder="ID automático"
+                                            disabled
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Data de Nascimento"
+                                            name="dataNascimento"
+                                            type="date"
+                                            value={formData.dataNascimento}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="CPF"
-                                    name="cpf"
-                                    value={formData.cpf}
-                                    onChange={handleChange}
-                                    placeholder="000.000.000-00"
-                                    required
-                                    maxLength={14}
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="RG"
-                                    name="rg"
-                                    value={formData.rg}
-                                    onChange={handleChange}
-                                    placeholder="00.000.000-0"
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Órgão Emissor"
-                                    name="orgaoEmissor"
-                                    value={formData.orgaoEmissor}
-                                    onChange={handleChange}
-                                    placeholder="SSP/UF"
-                                />
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
-                                <Input
-                                    label="Data de Nascimento"
-                                    name="dataNascimento"
-                                    type="date"
-                                    value={formData.dataNascimento}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-2">
                                 <Input
                                     label="Nome Completo"
                                     name="nome"
@@ -245,64 +272,80 @@ export default function CadastroCpf() {
                                     placeholder="Nome Completo"
                                     required
                                 />
-                            </div>
 
-                            <div>
-                                <Input
-                                    label="Profissão"
-                                    name="profissao"
-                                    value={formData.profissao}
-                                    onChange={handleChange}
-                                    placeholder="Profissão"
-                                />
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="RG"
+                                            name="rg"
+                                            value={formData.rg}
+                                            onChange={handleChange}
+                                            placeholder="00.000.000-0"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Órgão Emissor"
+                                            name="orgaoEmissor"
+                                            value={formData.orgaoEmissor}
+                                            onChange={handleChange}
+                                            placeholder="SSP/UF"
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Estado Civil
-                                </label>
-                                <select
-                                    name="estadoCivil"
-                                    value={formData.estadoCivil}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="">Selecione</option>
-                                    <option value="Solteiro(a)">Solteiro(a)</option>
-                                    <option value="Casado(a)">Casado(a)</option>
-                                    <option value="Divorciado(a)">Divorciado(a)</option>
-                                    <option value="Viúvo(a)">Viúvo(a)</option>
-                                    <option value="União Estável">União Estável</option>
-                                </select>
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Profissão"
+                                            name="profissao"
+                                            value={formData.profissao}
+                                            onChange={handleChange}
+                                            placeholder="Profissão"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Estado Civil
+                                        </label>
+                                        <select
+                                            name="estadoCivil"
+                                            value={formData.estadoCivil}
+                                            onChange={handleChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            <option value="">Selecione</option>
+                                            <option value="Solteiro(a)">Solteiro(a)</option>
+                                            <option value="Casado(a)">Casado(a)</option>
+                                            <option value="Divorciado(a)">Divorciado(a)</option>
+                                            <option value="Viúvo(a)">Viúvo(a)</option>
+                                            <option value="União Estável">União Estável</option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                            {/* Contato */}
-                            <div className="col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Contato</h2>
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Telefone"
+                                            name="telefone"
+                                            value={formData.telefone}
+                                            onChange={handleChange}
+                                            placeholder="(00) 0000-0000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Celular"
+                                            name="celular"
+                                            value={formData.celular}
+                                            onChange={handleChange}
+                                            placeholder="(00) 00000-0000"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Telefone"
-                                    name="telefone"
-                                    value={formData.telefone}
-                                    onChange={handleChange}
-                                    placeholder="(00) 0000-0000"
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Celular"
-                                    name="celular"
-                                    value={formData.celular}
-                                    onChange={handleChange}
-                                    placeholder="(00) 00000-0000"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-2">
                                 <Input
                                     label="E-mail"
                                     name="email"
@@ -314,24 +357,34 @@ export default function CadastroCpf() {
                                 />
                             </div>
 
-                            {/* Endereço */}
-                            <div className="col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Endereço</h2>
-                            </div>
+                            {/* Coluna 2: Endereço e Informações Adicionais */}
+                            <div className="space-y-4">
+                                <h2 className="text-md font-semibold text-gray-700 border-b pb-1">Endereço</h2>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="CEP"
+                                            name="cep"
+                                            value={formData.cep}
+                                            onChange={handleChange}
+                                            onBlur={buscarCep}
+                                            placeholder="00000-000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Estado"
+                                            name="estado"
+                                            value={formData.estado}
+                                            onChange={handleChange}
+                                            placeholder="Estado"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="CEP"
-                                    name="cep"
-                                    value={formData.cep}
-                                    onChange={handleChange}
-                                    onBlur={buscarCep}
-                                    placeholder="00000-000"
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-span-2 md:col-span-1">
                                 <Input
                                     label="Endereço"
                                     name="endereco"
@@ -340,83 +393,71 @@ export default function CadastroCpf() {
                                     placeholder="Rua, Avenida, etc."
                                     required
                                 />
-                            </div>
 
-                            <div>
-                                <Input
-                                    label="Número"
-                                    name="numero"
-                                    value={formData.numero}
-                                    onChange={handleChange}
-                                    placeholder="Número"
-                                    required
-                                />
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Número"
+                                            name="numero"
+                                            value={formData.numero}
+                                            onChange={handleChange}
+                                            placeholder="Número"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Complemento"
+                                            name="complemento"
+                                            value={formData.complemento}
+                                            onChange={handleChange}
+                                            placeholder="Complemento"
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Complemento"
-                                    name="complemento"
-                                    value={formData.complemento}
-                                    onChange={handleChange}
-                                    placeholder="Complemento"
-                                />
-                            </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Input
+                                            label="Bairro"
+                                            name="bairro"
+                                            value={formData.bairro}
+                                            onChange={handleChange}
+                                            placeholder="Bairro"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Input
+                                            label="Cidade"
+                                            name="cidade"
+                                            value={formData.cidade}
+                                            onChange={handleChange}
+                                            placeholder="Cidade"
+                                            required
+                                        />
+                                    </div>
+                                </div>
 
-                            <div>
-                                <Input
-                                    label="Bairro"
-                                    name="bairro"
-                                    value={formData.bairro}
-                                    onChange={handleChange}
-                                    placeholder="Bairro"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Cidade"
-                                    name="cidade"
-                                    value={formData.cidade}
-                                    onChange={handleChange}
-                                    placeholder="Cidade"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <Input
-                                    label="Estado"
-                                    name="estado"
-                                    value={formData.estado}
-                                    onChange={handleChange}
-                                    placeholder="Estado"
-                                    required
-                                />
-                            </div>
-
-                            {/* Informações Adicionais */}
-                            <div className="col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Informações Adicionais</h2>
-                            </div>
-
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Observações
-                                </label>
-                                <textarea
-                                    name="observacoes"
-                                    value={formData.observacoes}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Observações adicionais"
-                                ></textarea>
+                                <h2 className="text-md font-semibold mt-2 text-gray-700 border-b pb-1">Informações Adicionais</h2>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Observações
+                                    </label>
+                                    <textarea
+                                        name="observacoes"
+                                        value={formData.observacoes}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Observações adicionais"
+                                    ></textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="mt-8 flex justify-end space-x-4">
+                        <div className="mt-6 flex justify-end space-x-4">
                             <Button
                                 type="button"
                                 onClick={() => router.push("/cadastro")}
