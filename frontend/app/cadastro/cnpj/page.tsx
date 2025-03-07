@@ -198,7 +198,7 @@ export default function CadastroCnpj() {
                         // TODO: Implement form submission logic
                     }}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Dados da Empresa */}
+                            {/* Dados da Empresa      */}
                             <div className="col-span-2">
                                 <h2 className="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Dados da Empresa</h2>
                             </div>
