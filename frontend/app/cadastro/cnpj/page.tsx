@@ -76,7 +76,7 @@ export default function CadastroCnpj() {
         const cepLimpo = formData.cep.replace(/\D/g, '');
         
         if (cepLimpo.length !== 8) {
-            return; // CEP incompleto, não buscar
+            return; // CEP incompleto, não buscar 
         }
 
         setLoading(true);
